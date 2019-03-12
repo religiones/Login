@@ -2,6 +2,7 @@ package mg.studio.myapplication;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -23,6 +24,8 @@ import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
@@ -121,8 +124,39 @@ public class Register extends AppCompatActivity {
         pDialog.setMessage("Registering ...");
         if (!pDialog.isShowing()) pDialog.show();
         //Todo: Need to check Internet connection
-        new DownloadData().execute(name, email, password);
+//        new DownloadData().execute(name, email, password);
+        new SaveData().execute(name,email,password);
 
+
+    }
+
+    class SaveData extends AsyncTask<String, Void, Integer>{
+        @Override
+        protected Integer doInBackground(String... strings) {
+            try {
+                SharedPreferences.Editor editor = getSharedPreferences("data",MODE_PRIVATE).edit();
+                Set<String> set = new HashSet<>();
+                set.add(strings[0]);
+                set.add(strings[2]);
+                editor.putStringSet(strings[1],set);
+                editor.apply();
+                return 1;
+            }
+            catch (Exception e){
+                return 0;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Integer res){
+            if (res.equals(1)){
+                Intent intent = new Intent(getApplication(), Login.class);
+                startActivity(intent);
+            }
+            else {
+                Toast.makeText(Register.this,"Something is wrong",Toast.LENGTH_SHORT).show();
+            }
+        }
 
     }
 

@@ -3,6 +3,7 @@ package mg.studio.myapplication;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -26,6 +27,9 @@ import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
@@ -120,8 +124,8 @@ public class Login extends AppCompatActivity {
 
             //Todo: need to check weather the user has Internet before attempting checking the data
             // Start fetching the data from the Internet
-            new OnlineCredentialValidation().execute(email,password);
-
+//            new OnlineCredentialValidation().execute(email,password);
+            new OffLineCredentialValidation().execute(email,password);
 
         } else {
             // Prompt user to enter credentials
@@ -262,7 +266,45 @@ public class Login extends AppCompatActivity {
         }
     }
 
+    class OffLineCredentialValidation extends AsyncTask<String, Void, Set<String>>{
+        @Override
+        protected Set<String> doInBackground(String... strings){
+            try {
+                SharedPreferences sharedPreferences = getSharedPreferences("data",MODE_PRIVATE);
+                Set<String> set = new HashSet<>();
+                set = sharedPreferences.getStringSet(strings[0],set);
+                return set;
+            }
+            catch (Exception e){
+                return null;
+            }
+        }
 
+        @Override
+        protected void onPostExecute(Set<String> res){
+            if (!res.isEmpty()){
+                int i = 0;
+                String[] dataArray = new String[2];
+                for (String str : res){
+                    dataArray[i] = str;
+                    i++;
+                }
+                if (dataArray[0].equals(inputPassword.getText().toString().trim()))
+                {
+                    Toast.makeText(Login.this,"your name is "+ dataArray[1],Toast.LENGTH_LONG).show();
+                }
+                else {
+                    Toast.makeText(Login.this,"your password is wrong",Toast.LENGTH_LONG).show();
+                }
+            }
+            else {
+                Toast.makeText(Login.this,"Something was wrong",Toast.LENGTH_LONG).show();
+            }
+            Intent intent = new Intent(getApplication(), MainActivity.class);
+            startActivity(intent);
+        }
+
+    }
     /**
      * Parsing the string response from the Server
      * @param response
